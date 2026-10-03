@@ -1,0 +1,6 @@
+node_modules/
+tests/_frames/
+.netlify/
+.DS_Store
+Thumbs.db
+*.tmp.mp3

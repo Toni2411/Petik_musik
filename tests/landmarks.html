@@ -1,0 +1,30 @@
+<!doctype html><meta charset="utf-8"><title>Petik landmark check</title>
+<style>body{background:#111;color:#eee;font:13px system-ui;margin:0}#g{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}canvas{width:100%}</style>
+<div id="g"></div>
+<script type="module">
+import { FilesetResolver, HandLandmarker } from "../vendor/mediapipe/vision_bundle.mjs";
+import { describeFrame } from "../js/gestures.js";
+const files = new URLSearchParams(location.search).get("f").split(",");
+const fs = await FilesetResolver.forVisionTasks(new URL("../vendor/mediapipe/wasm", import.meta.url).href);
+const lmk = await HandLandmarker.createFromOptions(fs, { baseOptions: { modelAssetPath: new URL("../models/hand_landmarker.task", import.meta.url).href }, runningMode: "IMAGE", numHands: 2 });
+const out = [];
+for (const f of files) {
+  const img = new Image(); img.src = f; await img.decode();
+  const r = lmk.detect(img);
+  const fr = describeFrame(r);
+  const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
+  const g = c.getContext("2d");
+  g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(img, 0, 0); // mirrored like the app
+  g.fillStyle = "#ffc45c";
+  r.landmarks.forEach((lm, i) => {
+    for (const p of lm) { g.beginPath(); g.arc(p.x * c.width, p.y * c.height, 3, 0, 7); g.fill(); }
+  });
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = "rgba(0,0,0,.7)"; g.fillRect(0, 0, c.width, 34);
+  g.fillStyle = "#fff"; g.font = "bold 22px monospace";
+  g.fillText(`${f.split("/").pop()}  L:${fr.Lp || "-"}  R:${fr.Rp || "-"}`, 8, 25);
+  document.getElementById("g").append(c);
+  out.push({ f: f.split("/").pop(), L: fr.Lp, R: fr.Rp });
+}
+window.__done = out;
+</script>

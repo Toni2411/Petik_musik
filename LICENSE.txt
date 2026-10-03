@@ -1,0 +1,26 @@
+Petik
+Copyright (c) 2026 Muhammad Fathoni. All rights reserved.
+
+The Petik name, logo, visual design, text, and all source code written for Petik (index.html,
+css/, js/, assets/, tests/) are the property of Muhammad Fathoni. No part of it may be copied,
+modified, republished, sold, or used to make a derivative product without written permission
+from the copyright holder. Using the website at its official address is free.
+
+Contact: fathonimuhammad2411@gmail.com
+GitHub: https://github.com/Toni2411
+LinkedIn: https://www.linkedin.com/in/muhammad-fathoni-038274266
+
+------------------------------------------------------------------------------------------------
+Third-party components
+These are not owned by Muhammad Fathoni and stay under their own licenses:
+
+- MediaPipe Tasks Vision and the Hand Landmarker model (vendor/mediapipe, models/), by Google,
+  Apache License 2.0. See vendor/mediapipe/LICENSE.txt.
+- Tone.js (vendor/tone), MIT License. See vendor/tone/LICENSE.md.
+- Piano samples (samples/piano): Salamander Grand Piano by Alexander Holm,
+  Creative Commons Attribution 3.0 (https://creativecommons.org/licenses/by/3.0/).
+- Acoustic and nylon guitar samples (samples/mk_steel, samples/mk_nylon): Musyng Kite soundfont,
+  rendered by midi-js-soundfonts (Benjamin Gleitzman), Creative Commons Attribution-ShareAlike 3.0
+  (https://creativecommons.org/licenses/by-sa/3.0/). Leading silence was trimmed from each file.
+- Bright guitar samples (samples/guitar): tonejs-instruments by Nicholaus Brosowsky,
+  Creative Commons Attribution 3.0. Leading silence was trimmed from each file.

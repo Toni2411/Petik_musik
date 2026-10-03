@@ -1,0 +1,232 @@
+<!doctype html>
+<!-- Petik. Copyright (c) 2026 Muhammad Fathoni. All rights reserved. See LICENSE.txt. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Petik - Play chords with your hands</title>
+  <meta name="description" content="Play piano or guitar chords with hand signs in your browser. Hundreds of chords, your own sign for every chord, and one-tap recording of a vertical video.">
+  <meta property="og:title" content="Petik - Play chords with your hands">
+  <meta property="og:description" content="Show a hand sign to your webcam and Petik plays the chord. Piano or guitar, hundreds of chords, ready to record for TikTok and Reels.">
+  <meta name="theme-color" content="#0d0f14">
+  <meta name="author" content="Muhammad Fathoni">
+  <meta name="copyright" content="Copyright (c) 2026 Muhammad Fathoni. All rights reserved.">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="vendor/tone/Tone.js"></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./">
+      <img src="assets/icon.svg" alt="" width="28" height="28">
+      <span class="brand-name">Petik</span>
+      <span class="brand-tag" data-i18n="tagline">Play chords with your hands</span>
+    </a>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="id">ID</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="stage-wrap">
+      <div class="stage" id="stage">
+        <video id="cam" playsinline muted></video>
+        <canvas id="overlay"></canvas>
+
+        <div class="hud">
+          <div class="status" id="status"></div>
+          <div class="perf" id="perf" hidden></div>
+          <div class="chord-now" id="chordNow"></div>
+          <div class="chord-next" id="chordNext"></div>
+        </div>
+        <div class="countdown" id="countdown" hidden>
+          <div class="countdown-label" id="countdownLabel"></div>
+          <div class="countdown-num" id="countdownNum"></div>
+          <div class="countdown-bar"><span id="countdownBar"></span></div>
+        </div>
+        <div class="rec-badge" id="recBadge" hidden><span class="dot"></span><span id="recBadgeText">REC</span><span id="recTime">0:00</span></div>
+
+        <div class="intro" id="intro">
+          <h1 data-i18n="heroTitle">Your hands are the instrument.</h1>
+          <p data-i18n="heroBody"></p>
+          <button class="btn primary big" id="startBtn" type="button" data-i18n="start">Start camera</button>
+          <p class="fine" data-i18n="privacy"></p>
+          <p class="error" id="introError" hidden></p>
+        </div>
+      </div>
+
+      <div class="recbar" id="recBar">
+        <button class="btn rec" id="recStartBtn" type="button"><span class="rec-dot"></span><span data-i18n="recStart">Record</span></button>
+        <button class="btn" id="recPauseBtn" type="button" hidden></button>
+        <button class="btn" id="recStopBtn" type="button" hidden><span class="stop-sq"></span><span data-i18n="recStop">Stop</span></button>
+        <span class="rec-state" id="recState"></span>
+        <label class="check small"><input type="checkbox" id="withMic" checked><span data-i18n="recMic">Include my voice</span></label>
+      </div>
+
+      <ol class="strip" id="strip" aria-label="Chords"></ol>
+    </section>
+
+    <aside class="panel">
+      <nav class="tabs" role="tablist">
+        <button role="tab" type="button" data-tab="song" class="on" data-i18n="tabSong">Song</button>
+        <button role="tab" type="button" data-tab="gestures" data-i18n="tabGestures">Hand signs</button>
+        <button role="tab" type="button" data-tab="sound" data-i18n="tabSound">Sound</button>
+        <button role="tab" type="button" data-tab="record" data-i18n="tabRecord">Record</button>
+      </nav>
+
+      <div class="tab-body" data-body="song">
+        <label class="field">
+          <span data-i18n="songTitle">Song title</span>
+          <input id="title" type="text" maxlength="60" data-i18n-ph="songTitlePh">
+        </label>
+        <label class="field">
+          <span data-i18n="chordsLabel">Chords</span>
+          <input id="chords" type="text" autocomplete="off" spellcheck="false" data-i18n-ph="chordsPh">
+          <small data-i18n="chordsHelp"></small>
+        </label>
+        <div class="chips" id="chordChips"></div>
+        <div class="row">
+          <button class="btn" id="saveBtn" type="button" data-i18n="save">Save</button>
+          <button class="btn ghost" id="shareBtn" type="button" data-i18n="share">Copy share link</button>
+        </div>
+
+        <details class="picker" id="picker" open>
+          <summary><span data-i18n="addChord">Add a chord</span> <small id="chordCount"></small></summary>
+          <div class="picker-label" data-i18n="root">Root</div>
+          <div class="roots" id="roots"></div>
+          <div class="picker-label"><span data-i18n="bass">Bass note</span></div>
+          <select id="bassSel"></select>
+          <div id="qualities"></div>
+        </details>
+
+        <h3 data-i18n="presets">Start from a progression</h3>
+        <div class="genres" id="genres"></div>
+        <div class="presets" id="presets"></div>
+        <h3 data-i18n="mySongs">My songs</h3>
+        <ul class="songs" id="songs"></ul>
+      </div>
+
+      <div class="tab-body" data-body="gestures" hidden>
+        <fieldset class="seg three">
+          <legend data-i18n="modeLabel">How to choose a chord</legend>
+          <label><input type="radio" name="mode" value="signs" checked><span data-i18n="modeSigns">Hand signs</span></label>
+          <label><input type="radio" name="mode" value="count"><span data-i18n="modeCount">Count</span></label>
+          <label><input type="radio" name="mode" value="custom"><span data-i18n="modeCustom">Record my own</span></label>
+        </fieldset>
+        <p class="help" id="modeHelp"></p>
+        <fieldset class="seg three">
+          <legend data-i18n="response">Response</legend>
+          <label><input type="radio" name="response" value="fast"><span data-i18n="respFast">Fast</span></label>
+          <label><input type="radio" name="response" value="balanced" checked><span data-i18n="respBalanced">Balanced</span></label>
+          <label><input type="radio" name="response" value="accurate"><span data-i18n="respAccurate">Accurate</span></label>
+        </fieldset>
+        <p class="help" data-i18n="responseHelp"></p>
+        <p class="warn" id="modeWarn" hidden></p>
+        <ul class="glist" id="gestureList"></ul>
+      </div>
+
+      <div class="tab-body" data-body="sound" hidden>
+        <fieldset class="seg two-rows">
+          <legend data-i18n="instrument">Instrument</legend>
+          <label><input type="radio" name="instrument" value="piano" checked><span data-i18n="piano">Piano</span></label>
+          <label><input type="radio" name="instrument" value="steel"><span data-i18n="steel">Acoustic guitar</span></label>
+          <label><input type="radio" name="instrument" value="nylon"><span data-i18n="nylon">Nylon guitar</span></label>
+          <label><input type="radio" name="instrument" value="guitar"><span data-i18n="guitar">Bright guitar</span></label>
+          <label><input type="radio" name="instrument" value="pad"><span data-i18n="pad">Synth pad</span></label>
+          <label><input type="radio" name="instrument" value="soft"><span data-i18n="soft">Soft synth</span></label>
+        </fieldset>
+        <label class="check"><input type="checkbox" id="handTone" checked><span data-i18n="handTone">Hand height shapes the tone</span></label>
+        <p class="help" data-i18n="handToneHelp"></p>
+        <label class="field range">
+          <span data-i18n="volume">Volume</span>
+          <input id="volume" type="range" min="-24" max="9" step="1" value="0">
+        </label>
+        <label class="field range">
+          <span data-i18n="reverb">Room</span>
+          <input id="reverb" type="range" min="0" max="0.6" step="0.02" value="0.18">
+        </label>
+        <fieldset class="seg">
+          <legend data-i18n="rhythm">Rhythm</legend>
+          <label><input type="radio" name="rhythm" value="off" checked><span data-i18n="rhythmOff">Play once</span></label>
+          <label><input type="radio" name="rhythm" value="on"><span data-i18n="rhythmOn">Repeat on the beat</span></label>
+        </fieldset>
+        <label class="field range">
+          <span><span data-i18n="bpm">Tempo</span> <b id="bpmVal">80</b> BPM</span>
+          <input id="bpm" type="range" min="50" max="160" step="1" value="80">
+        </label>
+        <p class="help" data-i18n="restrikeHint"></p>
+      </div>
+
+      <div class="tab-body" data-body="record" hidden>
+        <h3 data-i18n="recTitle">Recording</h3>
+        <p class="help" data-i18n="recBody"></p>
+        <p class="help" data-i18n="recMicHelp"></p>
+        <p class="error" id="recError" hidden></p>
+        <div class="rec-result" id="recResult" hidden>
+          <h3 data-i18n="recLast">Last recording</h3>
+          <video id="recPreview" controls playsinline></video>
+          <a class="btn" id="recDownload" data-i18n="recDownload">Download again</a>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    <div class="foot-contact">
+      <span class="foot-label" data-i18n="contactLabel">Problems or ideas? Get in touch:</span>
+      <a href="mailto:fathonimuhammad2411@gmail.com?subject=Petik" rel="noopener">fathonimuhammad2411@gmail.com</a>
+      <a href="https://github.com/Toni2411" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.linkedin.com/in/muhammad-fathoni-038274266" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+    <div class="foot-legal">
+      <span>&copy; 2026 Muhammad Fathoni. <span data-i18n="rights">All rights reserved.</span></span>
+      <button type="button" class="linklike" id="creditsBtn" data-i18n="credits">Credits</button>
+    </div>
+  </footer>
+
+  <dialog id="signDialog" class="sign-dialog">
+    <h2><span data-i18n="signFor">Hand sign for</span> <b id="signChord"></b></h2>
+    <div class="sign-cols">
+      <div class="sign-col" data-side="L"></div>
+      <div class="sign-col" data-side="R"></div>
+    </div>
+    <p class="warn" id="signWarn" hidden></p>
+    <div class="row end">
+      <button class="btn ghost" type="button" id="signReset" data-i18n="resetSign">Default</button>
+      <span class="grow"></span>
+      <button class="btn ghost" type="button" id="signCancel" data-i18n="cancel">Cancel</button>
+      <button class="btn primary" type="button" id="signSave" data-i18n="saveSign">Save sign</button>
+    </div>
+  </dialog>
+
+  <dialog id="recDialog" class="rec-dialog">
+    <h2 data-i18n="recSaved">Video saved</h2>
+    <video id="recDialogVideo" controls playsinline></video>
+    <div class="row end">
+      <a class="btn ghost" id="recDialogDownload" data-i18n="recDownload">Download again</a>
+      <form method="dialog"><button class="btn primary" data-i18n="close">Close</button></form>
+    </div>
+  </dialog>
+
+  <dialog id="credits">
+    <h2 data-i18n="credits">Credits</h2>
+    <ul>
+      <li>Hand tracking: MediaPipe Hand Landmarker by Google, Apache License 2.0.</li>
+      <li>Audio engine: Tone.js, MIT License.</li>
+      <li>Piano: Salamander Grand Piano by Alexander Holm, CC BY 3.0.</li>
+      <li>Acoustic and nylon guitar: Musyng Kite soundfont, rendered by midi-js-soundfonts (Benjamin Gleitzman), CC BY-SA 3.0.</li>
+      <li>Bright guitar: acoustic guitar samples from tonejs-instruments by Nicholaus Brosowsky, CC BY 3.0.</li>
+    </ul>
+    <p class="fine-print" data-i18n="creditsNote">Petik, its name, design and code are the work of Muhammad Fathoni. The libraries and sound samples above keep their own licenses.</p>
+    <form method="dialog"><button class="btn">OK</button></form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
