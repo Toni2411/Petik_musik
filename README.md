@@ -1,5 +1,7 @@
 # Petik
 
+**Try it now: [petik-musik.netlify.app](https://petik-musik.netlify.app)** (Chrome or Edge on a laptop with a webcam works best)
+
 Play piano or guitar chords with hand gestures, right in the browser. Show fingers (or your own recorded poses) to the webcam, Petik plays the chord, and you can record a 9:16 video for TikTok, Reels and Shorts.
 
 Bilingual UI: English and Bahasa Indonesia.
@@ -16,6 +18,16 @@ Bilingual UI: English and Bahasa Indonesia.
 - **Piano, acoustic (steel) guitar, nylon guitar and a bright guitar** from sampled instruments, with barre-style guitar voicings, plus two browser synths: **Synth pad** (the warm, filtered pad heard in Gesture Synth videos, low open voicing root-fifth-octave-third) and **Soft synth**. With a synth, hand height shapes the tone (higher hands, brighter sound). Every instrument is level-matched and runs through a compressor and limiter, so strums never clip. Room reverb, volume, rhythm on the beat, Space to strum again.
 - **Recording**: Record, Pause/Continue and Stop under the camera. Stop downloads the 9:16 video automatically (MP4 in Chrome and Edge) and opens a preview to watch it back. Optional microphone.
 - **Songs**: save locally, share a link (chords and hand signs; recorded poses stay on each device).
+
+## How to play
+
+1. Open [petik-musik.netlify.app](https://petik-musik.netlify.app) and press **Start camera**. Allow the camera.
+2. In **Song**, type your chords or tap them in the chord picker, or start from a progression.
+3. In **Hand signs**, each chord shows which fingers to raise on which hand. The camera works like a mirror: your right hand is on the right of the screen. Tap **Edit** to change a sign.
+4. Hold a sign and the chord plays. Lower both hands or make two fists to stop.
+5. Press **Record** under the camera to make a 9:16 video; it downloads when you press **Stop**.
+
+Feedback and bug reports are welcome: open an issue here or email fathonimuhammad2411@gmail.com.
 
 ## Run locally
 
@@ -38,7 +50,7 @@ node tests/transitions.test.mjs  # frame-by-frame chord changes: no in-between c
 
 ## Deploy
 
-It is a static site with no build step. Any static host works:
+Live on Netlify: https://petik-musik.netlify.app (config in `netlify.toml`). It is a static site with no build step, so any static host works:
 
 - **Vercel**: `npx vercel` in this folder, or import the folder from GitHub.
 - **GitHub Pages**: push to a repository and enable Pages on the main branch.
