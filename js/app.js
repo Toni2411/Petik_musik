@@ -8,6 +8,8 @@ import { Sound } from "./sound.js";
 import { Recorder, recordingSupported } from "./recorder.js";
 import { PRESETS, GENRES } from "./presets.js";
 import { t, setLang, detectLang } from "./i18n.js";
+import { parseSong, sheetToChordPro, transposeSong, songChords, chordSequence, unknownChords, lineText } from "./chordpro.js";
+import { songHTML } from "./songview.js";
 
 const Tone = window.Tone;
 // Low latency audio: Tone schedules 100 ms ahead by default, which is a delay you can hear when
@@ -22,7 +24,8 @@ const QUICK = ["01000", "01100", "01110", "01111", "11111", "11001", "01001", "1
 /* ---------------- state ---------------- */
 
 const DEFAULT = { title: "", chords: "C G Am F", mode: "signs", instrument: "piano", volume: 0, reverb: 0.18,
-  rhythm: "off", bpm: 80, gestures: {}, shapes: {}, signs: {}, withMic: true, handTone: true, response: "balanced" };
+  rhythm: "off", bpm: 80, gestures: {}, shapes: {}, signs: {}, withMic: true, handTone: true, response: "balanced",
+  song: null, showLyrics: true };
 
 function loadJSON(key, fallback) {
   try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; } catch { return fallback; }
@@ -38,6 +41,16 @@ if (state.instrument === "guitar" && !state.instrumentV2) { state.instrument = "
 state.instrumentV2 = true;
 const persist = () => saveJSON("petik.current", state);
 
+// A song to load from the library once the page is ready (from ?song= or a share link).
+let pendingSong = null;
+{
+  const q = new URLSearchParams(location.search);
+  const slug = q.get("song");
+  if (slug && /^[a-z0-9-]+$/.test(slug)) pendingSong = { slug, transpose: Number(q.get("t")) || 0 };
+  if (q.get("paste")) pendingSong = { paste: true };
+  if (q.has("song") || q.has("paste")) history.replaceState(null, "", location.pathname);
+}
+
 // A shared link (#s=...) overrides the song part of the state. Signs travel with it; recorded poses do not.
 (function readShareLink() {
   const m = location.hash.match(/^#s=([A-Za-z0-9_-]+)$/);
@@ -50,8 +63,9 @@ const persist = () => saveJSON("petik.current", state);
         title: String(s.t || "").slice(0, 60), chords: s.c.slice(0, 400),
         mode: ["signs", "count", "custom"].includes(s.m) ? s.m : "signs",
         instrument: ["piano", "steel", "nylon", "guitar", "pad", "soft"].includes(s.i) ? s.i : "piano",
-        signs: s.s && typeof s.s === "object" ? s.s : {}, gestures: {}, shapes: {},
+        signs: s.s && typeof s.s === "object" ? s.s : {}, gestures: {}, shapes: {}, song: null,
       });
+      if (typeof s.g === "string" && /^[a-z0-9-]+$/.test(s.g)) pendingSong = { slug: s.g, transpose: Number(s.tr) || 0 };
     }
   } catch {}
   history.replaceState(null, "", location.pathname);
@@ -237,8 +251,8 @@ function renderSongs() {
     const del = el("button", "btn small ghost danger", t("del")); del.type = "button";
     open.onclick = () => {
       Object.assign(state, { title: s.title, chords: s.chords, mode: s.mode || "signs",
-        gestures: s.gestures || {}, shapes: s.shapes || {}, signs: s.signs || {} });
-      syncInputs(); songChanged();
+        gestures: s.gestures || {}, shapes: s.shapes || {}, signs: s.signs || {}, song: s.song || null });
+      syncInputs(); songChanged(); renderLyrics();
     };
     del.onclick = () => { saveJSON("petik.songs", loadJSON("petik.songs", []).filter((x) => x.id !== s.id)); renderSongs(); };
     li.append(grow, open, del);
@@ -312,6 +326,129 @@ function songChanged() {
   persist();
   stab.reset(); smoother.reset(); activeSlot = null; sound?.stop(); showChord(null);
   renderChips(); renderStrip(); renderGestures();
+}
+
+/* ---------------- songs with lyrics ---------------- */
+
+let songView = null;   // { song (transposed), seq: every chord in reading order }
+let follow = -1;       // index in seq of the chord played last
+let songIndex = null;  // the library index, fetched on first search
+
+const fmtSteps = (n) => (n > 0 ? `+${n}` : String(n));
+
+function currentSong() {
+  if (!state.song?.src) return null;
+  return transposeSong(parseSong(state.song.src), state.song.transpose || 0);
+}
+
+/** Load a song: its chords become the chord list (in order of first use) and the lyrics panel opens. */
+function applySong(meta, { keepSigns = false, quiet = false } = {}) {
+  const song = transposeSong(parseSong(meta.src), meta.transpose || 0);
+  const chords = songChords(song);
+  if (!chords.length) { toast(t("pasteEmpty")); return false; }
+  state.song = { src: meta.src, slug: meta.slug || null, transpose: meta.transpose || 0, local: !!meta.local };
+  state.title = [song.meta.title, song.meta.artist].filter(Boolean).join(" - ").slice(0, 60);
+  state.chords = chords.join(" ");
+  if (!keepSigns) { state.signs = {}; state.gestures = {}; state.shapes = {}; }
+  if (state.mode === "count" && chords.length > COUNT_MAX) state.mode = "signs";
+  state.showLyrics = true;
+  syncInputs(); songChanged(); renderLyrics();
+  const bad = unknownChords(song);
+  if (bad.length) toast(`${t("unknownInSong")} ${bad.join(", ")}`);
+  else if (!quiet) toast(`${t("songLoaded")}: ${song.meta.title || ""}`);
+  return true;
+}
+
+async function loadLibrarySong(slug, transpose = 0) {
+  try {
+    const res = await fetch(`data/songs/${slug}.pro`);
+    if (!res.ok) throw new Error(res.status);
+    applySong({ src: await res.text(), slug, transpose });
+  } catch { toast(t("songNotFound")); }
+}
+
+function renderLyrics() {
+  const panel = $("lyricsPanel");
+  const song = currentSong();
+  if (!song) { panel.hidden = true; songView = null; follow = -1; return; }
+  panel.hidden = false;
+  songView = { song, seq: chordSequence(song) };
+  follow = -1;
+  $("lyricsTitle").textContent = song.meta.title || t("songTitlePh");
+  $("lyricsArtist").textContent = song.meta.artist || "";
+  $("lyricsKey").textContent = song.meta.key ? `${t("keyLabel")}: ${song.meta.key}` : "";
+  $("lyricsT").textContent = fmtSteps(state.song.transpose || 0);
+  $("lyrics").innerHTML = songHTML(song);
+  $("lyrics").hidden = state.showLyrics === false;
+  $("lyricsToggle").textContent = state.showLyrics === false ? t("lyricsShow") : t("lyricsHide");
+  markFollow();
+}
+
+/** Highlight the chord just played and the one coming next, and keep that line in view. */
+function markFollow() {
+  const box = $("lyrics");
+  for (const e of box.querySelectorAll(".sv-ch.now, .sv-ch.next")) e.classList.remove("now", "next");
+  for (const e of box.querySelectorAll(".sv-line.current")) e.classList.remove("current");
+  if (!songView) return;
+  const now = follow >= 0 ? box.querySelector(`.sv-ch[data-i="${follow}"]`) : null;
+  const next = box.querySelector(`.sv-ch[data-i="${follow + 1}"]`);
+  now?.classList.add("now");
+  next?.classList.add("next");
+  const line = (now || next)?.closest(".sv-line");
+  if (line) {
+    line.classList.add("current");
+    box.scrollTo({ top: Math.max(0, line.offsetTop - box.clientHeight / 3) });
+  }
+}
+
+/** Move the song position to the chord just played: the nearest match ahead, else anywhere. */
+function followChord(sym) {
+  if (!songView) return;
+  const seq = songView.seq;
+  if (follow >= 0 && seq[follow]?.chord === sym) return;
+  let hit = -1;
+  for (let i = follow + 1; i < Math.min(seq.length, follow + 9) && hit < 0; i++) if (seq[i].chord === sym) hit = i;
+  for (let i = follow + 1; i < seq.length && hit < 0; i++) if (seq[i].chord === sym) hit = i;
+  for (let i = 0; i <= follow && i < seq.length && hit < 0; i++) if (seq[i].chord === sym) hit = i;
+  if (hit >= 0) { follow = hit; markFollow(); }
+}
+
+const nextSongChord = () => (songView ? songView.seq[follow + 1]?.chord || null : null);
+const currentLyric = () => (songView && follow >= 0 ? lineText(songView.song.lines[songView.seq[follow].line]) : "");
+
+async function searchSongs(q) {
+  const ul = $("songResults");
+  ul.innerHTML = "";
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return;
+  try { songIndex ||= await (await fetch("songs/index.json")).json(); } catch { return; }
+  const hits = songIndex.filter((s) => words.every((w) => `${s.title} ${s.artist} ${s.first}`.toLowerCase().includes(w))).slice(0, 8);
+  if (!hits.length) { ul.append(el("li", "empty", t("noResults"))); return; }
+  for (const s of hits) {
+    const li = el("li");
+    const b = el("button");
+    b.type = "button";
+    b.append(el("b", "", s.title), el("span", "", `${s.artist}  |  ${s.chords.slice(0, 6).join(" ")}`));
+    b.onclick = () => { loadLibrarySong(s.slug); $("songSearch").value = ""; ul.innerHTML = ""; };
+    li.append(b);
+    ul.append(li);
+  }
+}
+
+function openPaste() {
+  $("pasteErr").hidden = true;
+  $("pasteDialog").showModal();
+}
+
+function loadPasted() {
+  const text = $("pasteText").value;
+  const title = $("pasteName").value.trim(), artist = $("pasteArtist").value.trim();
+  const isPro = /\[[A-G][^\]\s]*\]/.test(text) || /^\s*\{[a-z_]+\s*:/im.test(text);
+  let src = isPro ? text : sheetToChordPro(text);
+  const head = [title && `{title: ${title}}`, artist && `{artist: ${artist}}`].filter(Boolean).join("\n");
+  if (head) src = `${head}\n${src}`;
+  if (!songChords(parseSong(src)).length) { $("pasteErr").textContent = t("pasteEmpty"); $("pasteErr").hidden = false; return; }
+  if (applySong({ src, local: true })) $("pasteDialog").close();
 }
 
 /* ---------------- sign editor ---------------- */
@@ -416,9 +553,12 @@ function showChord(slot) {
   const now = $("chordNow");
   now.textContent = slot === null ? "" : list[slot] || "";
   const next = $("chordNext");
-  if (slot !== null && list[slot + 1]) {
-    next.innerHTML = `<span>${t("next")}: <b></b></span>${state.mode === "count" ? "" : slotVisual(slot + 1)}`;
-    next.querySelector("b").textContent = list[slot + 1];
+  // With a song loaded, "next" is the next chord in the song, not the next one in the list.
+  const nextSym = slot === null ? null : songView ? nextSongChord() : list[slot + 1];
+  const nextIdx = nextSym ? list.indexOf(nextSym) : -1;
+  if (nextSym) {
+    next.innerHTML = `<span>${t("next")}: <b></b></span>${state.mode === "count" || nextIdx < 0 ? "" : slotVisual(nextIdx)}`;
+    next.querySelector("b").textContent = nextSym;
   } else next.innerHTML = "";
   now.classList.remove("pop"); void now.offsetWidth; if (slot !== null) now.classList.add("pop");
   highlight(slot);
@@ -430,6 +570,7 @@ function setSlot(slot) {
   if (!sym || !parseChord(sym)) return;
   activeSlot = slot;
   sound.play(sym);
+  followChord(sym);
   showChord(slot);
 }
 
@@ -572,7 +713,8 @@ function loop() {
       recorder.draw({
         landmarks: lastResult?.landmarks,
         chord: activeSlot !== null ? list[activeSlot] : "",
-        next: activeSlot !== null && list[activeSlot + 1] ? `${t("next")}: ${list[activeSlot + 1]}` : "",
+        next: activeSlot === null ? "" : (() => { const n = songView ? nextSongChord() : list[activeSlot + 1]; return n ? `${t("next")}: ${n}` : ""; })(),
+        lyric: currentLyric(),
         title: state.title,
         madeWith: t("madeWith"),
       });
@@ -723,7 +865,9 @@ async function stopRecording() {
 /* ---------------- wiring ---------------- */
 
 function shareLink() {
-  const payload = JSON.stringify({ t: state.title, c: state.chords, m: state.mode, i: state.instrument, s: state.signs });
+  // Library songs travel by name; pasted lyrics never leave this device.
+  const lib = state.song && state.song.slug && !state.song.local ? { g: state.song.slug, tr: state.song.transpose || 0 } : {};
+  const payload = JSON.stringify({ t: state.title, c: state.chords, m: state.mode, i: state.instrument, s: state.signs, ...lib });
   const b64 = btoa(unescape(encodeURIComponent(payload))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   return `${location.origin}${location.pathname}#s=${b64}`;
 }
@@ -733,7 +877,7 @@ function init() {
   syncInputs();
   renderAll();
 
-  for (const b of document.querySelectorAll("[data-lang]")) b.onclick = () => { setLang(b.dataset.lang); renderAll(); };
+  for (const b of document.querySelectorAll("[data-lang]")) b.onclick = () => { setLang(b.dataset.lang); renderAll(); renderLyrics(); };
 
   for (const tab of document.querySelectorAll("[data-tab]")) {
     tab.onclick = () => {
@@ -771,7 +915,7 @@ function init() {
     const songs = loadJSON("petik.songs", []);
     const id = (state.title || state.chords).toLowerCase();
     const entry = { id, title: state.title, chords: state.chords, mode: state.mode, gestures: state.gestures,
-      shapes: state.shapes, signs: state.signs, updated: Date.now() };
+      shapes: state.shapes, signs: state.signs, song: state.song, updated: Date.now() };
     saveJSON("petik.songs", [entry, ...songs.filter((s) => s.id !== id)].slice(0, 50));
     renderSongs(); toast(t("saved"));
   };
@@ -793,6 +937,31 @@ function init() {
     renderGestures(); renderStrip();
   };
   $("creditsBtn").onclick = () => $("credits").showModal();
+
+  let searchTimer;
+  $("songSearch").oninput = (e) => { clearTimeout(searchTimer); searchTimer = setTimeout(() => searchSongs(e.target.value), 120); };
+  $("pasteBtn").onclick = openPaste;
+  $("pasteCancel").onclick = () => $("pasteDialog").close();
+  $("pasteLoad").onclick = loadPasted;
+  const retune = (d) => {
+    if (!state.song) return;
+    const n = (state.song.transpose || 0) + d;
+    applySong({ ...state.song, transpose: n > 11 || n < -11 ? 0 : n }, { keepSigns: true, quiet: true });
+  };
+  $("ltUp").onclick = () => retune(1);
+  $("ltDown").onclick = () => retune(-1);
+  $("lyricsToggle").onclick = () => { state.showLyrics = state.showLyrics === false; persist(); renderLyrics(); };
+  $("lyricsClose").onclick = () => { state.song = null; persist(); renderLyrics(); };
+  $("lyrics").onclick = (e) => {
+    const c = e.target.closest(".sv-ch[data-i]");
+    if (!c) return;
+    follow = Number(c.dataset.i) - 1;     // that chord becomes "next"
+    markFollow();
+  };
+
+  renderLyrics();
+  if (pendingSong?.paste) openPaste();
+  else if (pendingSong?.slug) loadLibrarySong(pendingSong.slug, pendingSong.transpose);
 
   document.addEventListener("keydown", (e) => {
     if (e.target.matches("input, textarea, select")) return;

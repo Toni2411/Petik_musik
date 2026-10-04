@@ -16,6 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/songs.css">
   <script src="vendor/tone/Tone.js"></script>
 </head>
 <body>
@@ -25,6 +26,10 @@
       <span class="brand-name">Petik</span>
       <span class="brand-tag" data-i18n="tagline">Play chords with your hands</span>
     </a>
+    <nav class="mainnav">
+      <a href="./" class="on" data-i18n="navPlay">Play</a>
+      <a href="lagu/" data-i18n="navSongs">Songs</a>
+    </nav>
     <div class="lang" role="group" aria-label="Language">
       <button type="button" data-lang="en">EN</button>
       <button type="button" data-lang="id">ID</button>
@@ -67,7 +72,22 @@
         <label class="check small"><input type="checkbox" id="withMic" checked><span data-i18n="recMic">Include my voice</span></label>
       </div>
 
+      <section class="lyrics-panel" id="lyricsPanel" hidden>
+        <div class="lyrics-head">
+          <div class="grow"><b id="lyricsTitle"></b><small id="lyricsArtist"></small></div>
+          <span class="transpose"><span data-i18n="transpose">Transpose</span>
+            <button class="btn small" id="ltDown" type="button" aria-label="-1">-</button><b id="lyricsT">0</b>
+            <button class="btn small" id="ltUp" type="button" aria-label="+1">+</button></span>
+          <small class="song-key" id="lyricsKey"></small>
+          <button class="btn small ghost" id="lyricsToggle" type="button"></button>
+          <button class="btn small ghost" id="lyricsClose" type="button" aria-label="Close">x</button>
+        </div>
+        <div class="lyrics sv" id="lyrics"></div>
+        <p class="help lyrics-help" data-i18n="lyricsFollow"></p>
+      </section>
+
       <ol class="strip" id="strip" aria-label="Chords"></ol>
+
     </section>
 
     <aside class="panel">
@@ -79,6 +99,15 @@
       </nav>
 
       <div class="tab-body" data-body="song">
+        <div class="field">
+          <span data-i18n="findSong">Find a song</span>
+          <input id="songSearch" type="search" autocomplete="off" data-i18n-ph="findSongPh">
+          <ul class="song-results" id="songResults"></ul>
+          <div class="row">
+            <a class="btn small ghost" href="lagu/" data-i18n="browseSongs">Browse all songs</a>
+            <button class="btn small" id="pasteBtn" type="button" data-i18n="pasteSong">Paste a song</button>
+          </div>
+        </div>
         <label class="field">
           <span data-i18n="songTitle">Song title</span>
           <input id="title" type="text" maxlength="60" data-i18n-ph="songTitlePh">
@@ -200,6 +229,22 @@
       <span class="grow"></span>
       <button class="btn ghost" type="button" id="signCancel" data-i18n="cancel">Cancel</button>
       <button class="btn primary" type="button" id="signSave" data-i18n="saveSign">Save sign</button>
+    </div>
+  </dialog>
+
+  <dialog id="pasteDialog" class="sign-dialog">
+    <h2 data-i18n="pasteTitle">Paste a song</h2>
+    <p class="help" data-i18n="pasteHelp"></p>
+    <div class="row">
+      <input id="pasteName" type="text" maxlength="80" data-i18n-ph="pasteSongTitle">
+      <input id="pasteArtist" type="text" maxlength="80" data-i18n-ph="pasteArtist">
+    </div>
+    <textarea id="pasteText" class="paste-area" spellcheck="false"></textarea>
+    <p class="error" id="pasteErr" hidden></p>
+    <div class="row end">
+      <span class="grow"></span>
+      <button class="btn ghost" type="button" id="pasteCancel" data-i18n="cancel">Cancel</button>
+      <button class="btn primary" type="button" id="pasteLoad" data-i18n="pasteLoad">Load song</button>
     </div>
   </dialog>
 

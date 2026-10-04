@@ -8,7 +8,7 @@ Bilingual UI: English and Bahasa Indonesia.
 
 ## Features
 
-- **708 chords**: 59 chord types on all 12 roots (triads, sus, add, 6, 6/9, 7ths, 9ths, 11ths, 13ths, altered jazz chords), plus any bass note (D/F#, G/B). Type them or tap the chord picker. Common alternative spellings are understood (CM7, C-7, Cø, C°7, Cm(maj7), C7(b9)).
+- **1,176 chords**: 98 chord types on all 12 roots (triads, sus, add, 6, 6/9, 7ths, 9ths, 11ths, 13ths, altered jazz chords), plus any bass note (D/F#, G/B). Type them or tap the chord picker. Common alternative spellings are understood (CM7, C-7, Cø, C°7, Cm(maj7), C7(b9)).
 - **55 starter progressions** in 11 genres: pop, Indonesian styles (ballad, dangdut, koplo, melayu, keroncong), rock, blues, jazz, soul and R&B, lo-fi, anime and K-pop, folk, latin and reggae, worship.
 - **Three ways to choose a chord**
   - **Hand signs** (default, up to 40 chords): every chord has its own finger combination on the left and/or right hand, shown as a drawing of the hand plus the matching emoji where one exists (for example chord 11 is the love-you sign, thumb + index + pinky). Any sign can be edited finger by finger or from quick picks; duplicates are flagged.
@@ -19,6 +19,8 @@ Bilingual UI: English and Bahasa Indonesia.
 - **Recording**: Record, Pause/Continue and Stop under the camera. Stop downloads the 9:16 video automatically (MP4 in Chrome and Edge) and opens a preview to watch it back. Optional microphone.
 - **Songs**: save locally, share a link (chords and hand signs; recorded poses stay on each device).
 
+- **Songs with lyrics**: a searchable song library at [/lagu/](https://petik-musik.netlify.app/lagu/) with one page per song (lyrics with chords above the words, transpose, the hand sign for every chord). **Play in Petik** loads the song: its chords become your hand signs, the lyrics scroll under the camera, and the highlighted chord follows what you play. Recordings show the lyric line being sung. **Paste a song** reads any chord sheet (chords above lyrics, or ChordPro) and keeps it on your device only.
+
 ## How to play
 
 1. Open [petik-musik.netlify.app](https://petik-musik.netlify.app) and press **Start camera**. Allow the camera.
@@ -28,6 +30,19 @@ Bilingual UI: English and Bahasa Indonesia.
 5. Press **Record** under the camera to make a 9:16 video; it downloads when you press **Stop**.
 
 Feedback and bug reports are welcome: open an issue here or email fathonimuhammad2411@gmail.com.
+
+## Adding songs to the library
+
+Only add songs you are allowed to publish: public domain songs (author died more than 70 years ago, or
+traditional), or songs whose rights holder gave you permission. Every song file must say which.
+
+```bash
+node tools/add-song.mjs song.txt --title "Title" --artist "Artist" --license "Permission from <rights holder>, <date>"
+node tools/build-songs.mjs     # rebuilds lagu/, songs/index.json and sitemap.xml
+```
+
+`song.txt` can be a normal chord sheet (chords on the line above the lyrics) or ChordPro (`[C]Hello [G]world`).
+Songs live in `data/songs/*.pro`.
 
 ## Run locally
 
@@ -44,6 +59,7 @@ python -m http.server 8765 --bind 127.0.0.1
 node tests/chords.test.mjs     # every chord voices correctly on piano and guitar
 node tests/gestures.test.mjs   # hand sign matching
 node tests/transitions.test.mjs  # frame-by-frame chord changes: no in-between chords, fast real ones
+node tests/chordpro.test.mjs     # chord sheet and ChordPro reading, transpose
 ```
 
 `tests/landmarks.html?f=img1.jpg,img2.jpg` draws the finger pattern Petik reads on still images, for tuning.
@@ -65,6 +81,11 @@ js/app.js           camera, tracking loop, UI, songs, recording
 js/gestures.js      finger patterns, hand signs, custom gesture classifier, stabilizer
 js/handicon.js      SVG hand drawings
 js/presets.js       starter progressions by genre
+js/chordpro.js      songs: ChordPro and chord-sheet reader, transpose
+js/songview.js      lyrics-with-chords renderer (song pages and player)
+data/songs/         song library (.pro files)
+tools/              build-songs.mjs (song pages, sitemap), add-song.mjs
+lagu/               generated song pages
 js/chords.js        chord parser and piano/guitar voicings (tested)
 js/sound.js         Tone.js samplers
 js/recorder.js      9:16 canvas compositor and MediaRecorder

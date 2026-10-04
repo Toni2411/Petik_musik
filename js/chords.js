@@ -183,3 +183,24 @@ export function allChordSymbols() {
   for (const r of ROOTS) for (const g of QUALITY_GROUPS) for (const q of Object.keys(g.items)) out.push(r + q);
   return out;
 }
+
+const SHARP_SPELL = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const FLAT_SPELL = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+
+/**
+ * Move a chord up or down by `steps` semitones, keeping its quality and slash bass.
+ * `flats` picks the spelling (Bb vs A#); by default it follows the chord's own accidental.
+ * Text that is not a chord comes back unchanged.
+ */
+export function transposeChord(symbol, steps, flats) {
+  const s = String(symbol || "").trim();
+  const m = s.match(/^([A-G])([#b♯♭]?)(.*?)(?:\/([A-G])([#b♯♭]?))?$/);
+  if (!m || !parseChord(s) || !steps) return s;
+  const [, letter, acc, quality, bassLetter, bassAcc] = m;
+  const useFlats = flats ?? (acc === "b" || acc === "♭");
+  const spell = useFlats ? FLAT_SPELL : SHARP_SPELL;
+  const move = (pc) => spell[((pc + steps) % 12 + 12) % 12];
+  let out = move(pcOf(letter, acc)) + quality;
+  if (bassLetter) out += "/" + move(pcOf(bassLetter, bassAcc));
+  return out;
+}

@@ -1,0 +1,139 @@
+<!doctype html>
+<!-- Petik. Copyright (c) 2026 Muhammad Fathoni. All rights reserved. See LICENSE.txt. -->
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lagu dan chord | Petik</title>
+  <meta name="description" content="Pustaka lagu dengan chord dan lirik yang bisa langsung dimainkan dengan isyarat tangan di Petik. Cari berdasarkan judul atau penyanyi.">
+  <link rel="canonical" href="https://petik-musik.netlify.app/lagu/">
+  <meta property="og:title" content="Lagu dan chord | Petik">
+  <meta property="og:description" content="Pustaka lagu dengan chord dan lirik yang bisa langsung dimainkan dengan isyarat tangan di Petik. Cari berdasarkan judul atau penyanyi.">
+  <meta property="og:url" content="https://petik-musik.netlify.app/lagu/">
+  <meta name="theme-color" content="#0d0f14">
+  <meta name="author" content="Muhammad Fathoni">
+  <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/songs.css">
+</head>
+<body class="songpage">
+  <header class="top">
+    <a class="brand" href="../">
+      <img src="../assets/icon.svg" alt="" width="28" height="28">
+      <span class="brand-name">Petik</span>
+    </a>
+    <nav class="mainnav">
+      <a href="../" data-i18n="navPlay">Play</a>
+      <a href="../lagu/" class="on" data-i18n="navSongs">Songs</a>
+    </nav>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="id">ID</button>
+    </div>
+  </header>
+  <main class="song-wrap">
+    <h1 class="song-title" data-i18n="songsTitle">Songs</h1>
+    <p class="song-artist" data-i18n="songsIntro">Lyrics with chords you can play with hand signs. Search by title or artist.</p>
+    <input class="lib-search" id="libSearch" type="search" autocomplete="off" data-i18n-ph="searchPh" placeholder="Search title or artist">
+    <p class="lib-empty" id="libEmpty" hidden data-i18n="noResults">No songs found.</p>
+    <h2 class="lib-group" data-i18n="groupIndonesia">Lagu Indonesia</h2>
+    <ul class="lib-list">
+      <li data-search="apuse lagu daerah papua apuse kokon dao, yarabe soren doreri">
+        <a href="apuse/"><b>Apuse</b><span>Lagu daerah Papua</span><small>C  G  F</small></a>
+      </li>
+      <li data-search="burung kakatua lagu daerah maluku burung kakatua, hinggap di jendela">
+        <a href="burung-kakatua/"><b>Burung Kakatua</b><span>Lagu daerah Maluku</span><small>C  G  F</small></a>
+      </li>
+      <li data-search="cublak-cublak suweng lagu daerah jawa tengah (sunan giri) cublak-cublak suweng, suwenge ting gelenter">
+        <a href="cublak-cublak-suweng/"><b>Cublak-Cublak Suweng</b><span>Lagu daerah Jawa Tengah (Sunan Giri)</span><small>C  G  F</small></a>
+      </li>
+      <li data-search="ibu kita kartini w.r. supratman ibu kita kartini, putri sejati">
+        <a href="ibu-kita-kartini/"><b>Ibu Kita Kartini</b><span>W.R. Supratman</span><small>C  F  G</small></a>
+      </li>
+      <li data-search="injit-injit semut lagu daerah jambi injit-injit semut, siapa sakit naik di atas">
+        <a href="injit-injit-semut/"><b>Injit-Injit Semut</b><span>Lagu daerah Jambi</span><small>C  G</small></a>
+      </li>
+      <li data-search="kicir-kicir lagu daerah betawi kicir-kicir ini lagunya, lagu lama ya tuan dari jakarta">
+        <a href="kicir-kicir/"><b>Kicir-Kicir</b><span>Lagu daerah Betawi</span><small>C  G  F</small></a>
+      </li>
+      <li data-search="lir-ilir lagu daerah jawa tengah (sunan kalijaga) lir-ilir, lir-ilir, tandure wus sumilir">
+        <a href="lir-ilir/"><b>Lir-Ilir</b><span>Lagu daerah Jawa Tengah (Sunan Kalijaga)</span><small>C  G  F</small></a>
+      </li>
+      <li data-search="rasa sayange lagu daerah maluku rasa sayange, rasa sayang sayange">
+        <a href="rasa-sayange/"><b>Rasa Sayange</b><span>Lagu daerah Maluku</span><small>C  G  G7</small></a>
+      </li>
+      <li data-search="soleram lagu daerah riau soleram, soleram, soleram anak yang manis">
+        <a href="soleram/"><b>Soleram</b><span>Lagu daerah Riau</span><small>C  G  F</small></a>
+      </li>
+      <li data-search="suwe ora jamu lagu daerah jawa tengah suwe ora jamu, jamu godhong tela">
+        <a href="suwe-ora-jamu/"><b>Suwe Ora Jamu</b><span>Lagu daerah Jawa Tengah</span><small>C  F  G</small></a>
+      </li>
+      <li data-search="yamko rambe yamko lagu daerah papua hee yamko rambe yamko, aronawa kombe">
+        <a href="yamko-rambe-yamko/"><b>Yamko Rambe Yamko</b><span>Lagu daerah Papua</span><small>C  G  F</small></a>
+      </li>
+    </ul>
+    <h2 class="lib-group" data-i18n="groupWorld">International</h2>
+    <ul class="lib-list">
+      <li data-search="amazing grace john newton amazing grace, how sweet the sound">
+        <a href="amazing-grace/"><b>Amazing Grace</b><span>John Newton</span><small>G  G7  C  D</small></a>
+      </li>
+      <li data-search="auld lang syne robert burns should auld acquaintance be forgot">
+        <a href="auld-lang-syne/"><b>Auld Lang Syne</b><span>Robert Burns</span><small>G  D  C  Em</small></a>
+      </li>
+      <li data-search="danny boy frederic weatherly oh danny boy, the pipes, the pipes are calling">
+        <a href="danny-boy/"><b>Danny Boy</b><span>Frederic Weatherly</span><small>C  C7  F  Am  G  Dm</small></a>
+      </li>
+      <li data-search="happy birthday to you mildred j. hill and patty hill happy birthday to you">
+        <a href="happy-birthday-to-you/"><b>Happy Birthday to You</b><span>Mildred J. Hill and Patty Hill</span><small>C  G  F</small></a>
+      </li>
+      <li data-search="jingle bells james lord pierpont dashing through the snow, in a one-horse open sleigh">
+        <a href="jingle-bells/"><b>Jingle Bells</b><span>James Lord Pierpont</span><small>G  C  D  A</small></a>
+      </li>
+      <li data-search="oh my darling, clementine traditional american ballad in a cavern, in a canyon, excavating for a mine">
+        <a href="clementine/"><b>Oh My Darling, Clementine</b><span>Traditional American ballad</span><small>C  G  G7</small></a>
+      </li>
+      <li data-search="oh! susanna stephen foster i come from alabama with my banjo on my knee">
+        <a href="oh-susanna/"><b>Oh! Susanna</b><span>Stephen Foster</span><small>C  G  F</small></a>
+      </li>
+      <li data-search="row, row, row your boat traditional nursery rhyme row, row, row your boat">
+        <a href="row-row-row-your-boat/"><b>Row, Row, Row Your Boat</b><span>Traditional nursery rhyme</span><small>C  G</small></a>
+      </li>
+      <li data-search="scarborough fair traditional english ballad are you going to scarborough fair?">
+        <a href="scarborough-fair/"><b>Scarborough Fair</b><span>Traditional English ballad</span><small>Am  G  C  D</small></a>
+      </li>
+      <li data-search="silent night joseph mohr, english words by john freeman young silent night, holy night">
+        <a href="silent-night/"><b>Silent Night</b><span>Joseph Mohr, English words by John Freeman Young</span><small>C  G  F</small></a>
+      </li>
+      <li data-search="swing low, sweet chariot traditional spiritual swing low, sweet chariot">
+        <a href="swing-low-sweet-chariot/"><b>Swing Low, Sweet Chariot</b><span>Traditional spiritual</span><small>C  F  G</small></a>
+      </li>
+      <li data-search="twinkle, twinkle, little star jane taylor twinkle, twinkle, little star">
+        <a href="twinkle-twinkle-little-star/"><b>Twinkle, Twinkle, Little Star</b><span>Jane Taylor</span><small>C  F  G</small></a>
+      </li>
+      <li data-search="when the saints go marching in traditional spiritual oh when the saints go marching in">
+        <a href="when-the-saints-go-marching-in/"><b>When the Saints Go Marching In</b><span>Traditional spiritual</span><small>C  G  C7  F</small></a>
+      </li>
+    </ul>
+    <div class="lib-own">
+      <h2 data-i18n="ownSongTitle">Your own song?</h2>
+      <p data-i18n="ownSongBody">Paste any lyrics with chords into Petik to play along. It stays on your device.</p>
+      <a class="btn" href="../?paste=1" data-i18n="pasteSong">Paste a song</a>
+    </div>
+  </main>
+  <footer class="foot">
+    <div class="foot-contact">
+      <span class="foot-label" data-i18n="contactLabel">Problems or ideas? Get in touch:</span>
+      <a href="mailto:fathonimuhammad2411@gmail.com?subject=Petik" rel="noopener">fathonimuhammad2411@gmail.com</a>
+      <a href="https://github.com/Toni2411" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.linkedin.com/in/muhammad-fathoni-038274266" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+    <div class="foot-legal">
+      <span>&copy; 2026 Muhammad Fathoni. <span data-i18n="rights">All rights reserved.</span></span>
+    </div>
+  </footer>
+  <script type="module" src="../js/library.js"></script>
+</body>
+</html>

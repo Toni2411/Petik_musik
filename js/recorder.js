@@ -73,6 +73,16 @@ export class Recorder {
     }
     g.font = "500 26px 'Inter', system-ui, sans-serif";
     g.fillStyle = "rgba(238,240,243,0.7)";
+    if (overlay.lyric) {
+      // The line being sung, shrunk to fit the width.
+      let size = 38;
+      g.font = `600 ${size}px 'Inter', system-ui, sans-serif`;
+      while (size > 22 && g.measureText(overlay.lyric).width > W - 60) { size -= 2; g.font = `600 ${size}px 'Inter', system-ui, sans-serif`; }
+      g.fillStyle = "#eef0f3";
+      g.fillText(overlay.lyric, W / 2, H - 115);
+    }
+    g.font = "500 26px 'Inter', system-ui, sans-serif";
+    g.fillStyle = "rgba(238,240,243,0.7)";
     g.fillText(overlay.madeWith || "Made with Petik", W / 2, H - 60);
   }
 

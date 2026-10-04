@@ -141,10 +141,10 @@ button, input { font: inherit; color: inherit; }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field > span { font-weight: 600; font-size: 14px; }
 .field small, .help { color: var(--muted); font-size: 13px; margin: 0; }
-input[type="text"] {
+input[type="text"], input[type="search"] {
   background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
 }
-input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+input[type="text"]:focus, input[type="search"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
 input[type="range"] { width: 100%; accent-color: var(--accent); }
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }

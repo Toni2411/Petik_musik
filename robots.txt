@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /tests/
+Sitemap: https://petik-musik.netlify.app/sitemap.xml
